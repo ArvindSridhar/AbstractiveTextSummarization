@@ -5,9 +5,10 @@ Code creds go to https://github.com/abisee/pointer-generator
 This is built to run with Python3 and Tensorflow 1.5.0+
 
 ## Pre-processing
-Get the dataset folder from Google Drive
-Name this folder `dataset` and put it inside the current directory
+Get the dataset folder from Google Drive. Name this folder `dataset` and put it inside the current directory
+
 Also create a folder `logs` in the current directory
+
 Each time, make sure to name your experiment uniquely (shouldn't share name with an experiment already in logs/)
 
 ## Training
