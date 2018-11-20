@@ -54,11 +54,11 @@ class Vocab(object):
       self._count += 1
 
     # Read the vocab file and add words up to max_size
-    with open(vocab_file, 'r') as vocab_f:
+    with open(vocab_file, 'r', encoding='utf-8') as vocab_f:
       for line in vocab_f:
         pieces = line.split()
         if len(pieces) != 2:
-          print 'Warning: incorrectly formatted line in vocabulary file: %s\n' % line
+          print('Warning: incorrectly formatted line in vocabulary file: %s\n' % line)
           continue
         w = pieces[0]
         if w in [SENTENCE_START, SENTENCE_END, UNKNOWN_TOKEN, PAD_TOKEN, START_DECODING, STOP_DECODING]:
@@ -69,10 +69,10 @@ class Vocab(object):
         self._id_to_word[self._count] = w
         self._count += 1
         if max_size != 0 and self._count >= max_size:
-          print "max_size of vocab was specified as %i; we now have %i words. Stopping reading." % (max_size, self._count)
+          print("max_size of vocab was specified as %i; we now have %i words. Stopping reading." % (max_size, self._count))
           break
 
-    print "Finished constructing vocabulary of %i total words. Last word added: %s" % (self._count, self._id_to_word[self._count-1])
+    print("Finished constructing vocabulary of %i total words. Last word added: %s" % (self._count, self._id_to_word[self._count-1]))
 
   def word2id(self, word):
     """Returns the id (integer) of a word (string). Returns [UNK] id if word is OOV."""
@@ -97,11 +97,11 @@ class Vocab(object):
     Args:
       fpath: place to write the metadata file
     """
-    print "Writing word embedding metadata file to %s..." % (fpath)
-    with open(fpath, "w") as f:
+    print("Writing word embedding metadata file to %s..." % (fpath))
+    with open(fpath, "w", encoding='utf-8') as f:
       fieldnames = ['word']
       writer = csv.DictWriter(f, delimiter="\t", fieldnames=fieldnames)
-      for i in xrange(self.size()):
+      for i in range(self.size()):
         writer.writerow({"word": self._id_to_word[i]})
 
 
@@ -137,7 +137,7 @@ def example_generator(data_path, single_pass):
         example_str = struct.unpack('%ds' % str_len, reader.read(str_len))[0]
         yield example_pb2.Example.FromString(example_str)
     if single_pass:
-      print "example_generator completed reading all datafiles. No more data."
+      print("example_generator completed reading all datafiles. No more data.")
       break
 
 

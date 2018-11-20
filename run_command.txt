@@ -1,0 +1,1 @@
+python3 run_summarization.py --mode=train --data_path=make_dataset/finished_files/chunked/train_* --vocab_path=make_dataset/finished_files/vocab --log_root=logs/ --exp_name=training1

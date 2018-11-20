@@ -31,6 +31,7 @@ FLAGS = tf.app.flags.FLAGS
 
 SECS_UNTIL_NEW_CKPT = 60  # max number of seconds before loading new checkpoint
 
+file_no = 1
 
 class BeamSearchDecoder(object):
   """Beam search decoder."""
@@ -152,10 +153,10 @@ class BeamSearchDecoder(object):
     ref_file = os.path.join(self._rouge_ref_dir, "%06d_reference.txt" % ex_index)
     decoded_file = os.path.join(self._rouge_dec_dir, "%06d_decoded.txt" % ex_index)
 
-    with open(ref_file, "w") as f:
+    with open(ref_file, "w", encoding='utf-8') as f:
       for idx,sent in enumerate(reference_sents):
         f.write(sent) if idx==len(reference_sents)-1 else f.write(sent+"\n")
-    with open(decoded_file, "w") as f:
+    with open(decoded_file, "w", encoding='utf-8') as f:
       for idx,sent in enumerate(decoded_sents):
         f.write(sent) if idx==len(decoded_sents)-1 else f.write(sent+"\n")
 
@@ -173,6 +174,7 @@ class BeamSearchDecoder(object):
       decoded_words: List of strings; the words of the generated summary.
       p_gens: List of scalars; the p_gen values. If not running in pointer-generator mode, list of None.
     """
+    global file_no
     article_lst = article.split() # list of words
     decoded_lst = decoded_words # list of decoded words
     to_write = {
@@ -183,19 +185,20 @@ class BeamSearchDecoder(object):
     }
     if FLAGS.pointer_gen:
       to_write['p_gens'] = p_gens
-    output_fname = os.path.join(self._decode_dir, 'attn_vis_data.json')
-    with open(output_fname, 'w') as output_file:
+    output_fname = os.path.join(self._decode_dir, 'attn_vis_data_%04d.json' % file_no)
+    with open(output_fname, 'w', encoding='utf-8') as output_file:
       json.dump(to_write, output_file)
     tf.logging.info('Wrote visualization data to %s', output_fname)
+    file_no += 1
 
 
 def print_results(article, abstract, decoded_output):
   """Prints the article, the reference summmary and the decoded summary to screen"""
-  print ""
+  print("---------------------------------------------------------------------------")
   tf.logging.info('ARTICLE:  %s', article)
   tf.logging.info('REFERENCE SUMMARY: %s', abstract)
   tf.logging.info('GENERATED SUMMARY: %s', decoded_output)
-  print ""
+  print("---------------------------------------------------------------------------")
 
 
 def make_html_safe(s):
@@ -237,7 +240,7 @@ def rouge_log(results_dict, dir_to_write):
   tf.logging.info(log_str) # log to screen
   results_file = os.path.join(dir_to_write, "ROUGE_results.txt")
   tf.logging.info("Writing final ROUGE results to %s...", results_file)
-  with open(results_file, "w") as f:
+  with open(results_file, "w", encoding='utf-8') as f:
     f.write(log_str)
 
 def get_decode_dir_name(ckpt_name):
