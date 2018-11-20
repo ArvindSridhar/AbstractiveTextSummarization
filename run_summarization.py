@@ -44,6 +44,8 @@ tf.app.flags.DEFINE_string('log_root', '', 'Root directory for all logging.')
 tf.app.flags.DEFINE_string('exp_name', '', 'Name for experiment. Logs will be saved in a directory with this name, under log_root.')
 
 # Hyperparameters
+num_epochs_train = 100
+num_epochs_eval = 100
 tf.app.flags.DEFINE_integer('hidden_dim', 256, 'dimension of RNN hidden states')
 tf.app.flags.DEFINE_integer('emb_dim', 128, 'dimension of word embeddings')
 tf.app.flags.DEFINE_integer('batch_size', 16, 'minibatch size')
@@ -188,8 +190,8 @@ def run_training(model, batcher, sess_context_manager, sv, summary_writer):
     if FLAGS.debug: # start the tensorflow debugger
       sess = tf_debug.LocalCLIDebugWrapperSession(sess)
       sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
-    for i in range(100): # while true: repeats until interrupted
-      print("Epoch", i+1, "out of 100")
+    for i in range(num_epochs_train): # while true: repeats until interrupted
+      print("Epoch", i+1, "out of", num_epochs_train)
       batch = batcher.next_batch()
 
       tf.logging.info('running training step...')
@@ -228,8 +230,8 @@ def run_eval(model, batcher, vocab):
   running_avg_loss = 0 # the eval job keeps a smoother, running average loss to tell it when to implement early stopping
   best_loss = None  # will hold the best loss achieved so far
 
-  for i in range(100): #while True:
-    print("Epoch", i+1, "out of 100")
+  for i in range(num_epochs_eval): #while True:
+    print("Epoch", i+1, "out of", num_epochs_eval)
     _ = util.load_ckpt(saver, sess) # load a new checkpoint
     batch = batcher.next_batch() # get the next batch
 

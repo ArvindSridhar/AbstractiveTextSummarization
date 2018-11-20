@@ -1,3 +1,4 @@
 *.pyc
 .DS_Store
-make_dataset/
+dataset/
+logs/
