@@ -1,5 +1,5 @@
 # Training
-python3 run_summarization.py --mode=train --data_path=make_dataset/finished_files/chunked/train_* --vocab_path=make_dataset/finished_files/vocab --log_root=logs/ --exp_name=training1
+python3 run_summarization.py --mode=train --data_path=dataset/finished_files/chunked/train_* --vocab_path=dataset/finished_files/vocab --log_root=logs/ --exp_name=training1
 
 # Evaluation
-python3 run_summarization.py --mode=eval --data_path=make_dataset/finished_files/chunked/val_* --vocab_path=make_dataset/finished_files/vocab --log_root=logs/ --exp_name=training1
+python3 run_summarization.py --mode=eval --data_path=dataset/finished_files/chunked/val_* --vocab_path=dataset/finished_files/vocab --log_root=logs/ --exp_name=training1
