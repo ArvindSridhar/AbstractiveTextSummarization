@@ -23,6 +23,7 @@ import time
 import numpy as np
 import tensorflow as tf
 import data
+from get_nyt_dataset import get_data
 
 
 class Example(object):
@@ -360,11 +361,25 @@ class Batcher(object):
 
     Args:
       example_generator: a generator of tf.Examples from file. See data.example_generator"""
+    # while True:
+    #   e = next(example_generator) # e is a tf.Example
+    #   try:
+    #     article_text = e.features.feature['article'].bytes_list.value[0].decode() # the article text was saved under the key 'article' in the data files
+    #     abstract_text = e.features.feature['abstract'].bytes_list.value[0].decode() # the abstract text was saved under the key 'abstract' in the data files
+    #   except ValueError:
+    #     tf.logging.error('Failed to get article or abstract from example')
+    #     continue
+    #   if len(article_text)==0: # See https://github.com/abisee/pointer-generator/issues/1
+    #     tf.logging.warning('Found an example with empty article text. Skipping it.')
+    #   else:
+    #     yield (article_text, abstract_text)
+    train_abstracts, train_fulltexts, indexed_ids = get_data()
+    count = 0
     while True:
-      e = next(example_generator) # e is a tf.Example
       try:
-        article_text = e.features.feature['article'].bytes_list.value[0].decode() # the article text was saved under the key 'article' in the data files
-        abstract_text = e.features.feature['abstract'].bytes_list.value[0].decode() # the abstract text was saved under the key 'abstract' in the data files
+        article_id = indexed_ids[count]
+        article_text = train_fulltexts[article_id]
+        abstract_text = train_abstracts[article_id]
       except ValueError:
         tf.logging.error('Failed to get article or abstract from example')
         continue
@@ -372,3 +387,4 @@ class Batcher(object):
         tf.logging.warning('Found an example with empty article text. Skipping it.')
       else:
         yield (article_text, abstract_text)
+      count += 1
