@@ -1,0 +1,28 @@
+PointerGen Evaluation
+
+Evaluation Performed on 1670 Test Documents
+
+ROUGE Comparison (Model Performance vs Label Performance)
+
+SCORE      MODEL    LABEL
+_________________________
+ROUGE 1                  |
+Precision: 38.82 vs 44.36|
+Recall:    41.46 vs 44.38|
+F1 score:  38.84 vs 42.37|
+                         |
+ROUGE 2                  |
+Precision: 16.88 vs 26.49|
+Recall:    17.92 vs 25.72|
+F1 score:  16.81 vs 24.66|
+                         |
+ROUGE L                  |
+Precision: 35.76 vs 40.91|
+Recall:    38.11 vs 40.68|
+F1 score:  35.71 vs 36.67|
+_________________________|
+
+Average Word Counts
+PointerGen: 58.05 words
+Label: 53.51 words
+Human: 50.24 words

@@ -80,51 +80,59 @@ class BeamSearchDecoder(object):
     t0 = time.time()
     counter = 0
     # Number of articles to actually decode
-    while counter < 20:
-      batch = self._batcher.next_batch()  # 1 example repeated across batch
-      if batch is None: # finished decoding dataset in single_pass mode
-        assert FLAGS.single_pass, "Dataset exhausted, but we are not in single_pass mode"
-        tf.logging.info("Decoder has finished reading dataset for single_pass.")
-        tf.logging.info("Output has been saved in %s and %s. Now starting ROUGE eval...", self._rouge_ref_dir, self._rouge_dec_dir)
-        results_dict = rouge_eval(self._rouge_ref_dir, self._rouge_dec_dir)
-        rouge_log(results_dict, self._decode_dir)
-        return
-
-      original_article = batch.original_articles[0]  # string
-      original_abstract = batch.original_abstracts[0]  # string
-      original_abstract_sents = batch.original_abstracts_sents[0]  # list of strings
-
-      article_withunks = data.show_art_oovs(original_article, self._vocab) # string
-      abstract_withunks = data.show_abs_oovs(original_abstract, self._vocab, (batch.art_oovs[0] if FLAGS.pointer_gen else None)) # string
-
-      # Run beam search to get best Hypothesis
-      best_hyp = beam_search.run_beam_search(self._sess, self._model, self._vocab, batch)
-
-      # Extract the output ids from the hypothesis and convert back to words
-      output_ids = [int(t) for t in best_hyp.tokens[1:]]
-      decoded_words = data.outputids2words(output_ids, self._vocab, (batch.art_oovs[0] if FLAGS.pointer_gen else None))
-
-      # Remove the [STOP] token from decoded_words, if necessary
+    while counter < 1670:
       try:
-        fst_stop_idx = decoded_words.index(data.STOP_DECODING) # index of the (first) [STOP] symbol
-        decoded_words = decoded_words[:fst_stop_idx]
-      except ValueError:
-        decoded_words = decoded_words
-      decoded_output = ' '.join(decoded_words) # single string
+        batch = self._batcher.next_batch()  # 1 example repeated across batch
+        if batch is None: # finished decoding dataset in single_pass mode
+          assert FLAGS.single_pass, "Dataset exhausted, but we are not in single_pass mode"
+          tf.logging.info("Decoder has finished reading dataset for single_pass.")
+          tf.logging.info("Output has been saved in %s and %s. Now starting ROUGE eval...", self._rouge_ref_dir, self._rouge_dec_dir)
+          results_dict = rouge_eval(self._rouge_ref_dir, self._rouge_dec_dir)
+          rouge_log(results_dict, self._decode_dir)
+          return
 
-      if FLAGS.single_pass:
-        self.write_for_rouge(original_abstract_sents, decoded_words, counter) # write ref summary and decoded summary to file, to eval with pyrouge later
-        counter += 1 # this is how many examples we've decoded
-      else:
-        print_results(article_withunks, abstract_withunks, decoded_output) # log output to screen
-        self.write_for_attnvis(article_withunks, abstract_withunks, decoded_words, best_hyp.attn_dists, best_hyp.p_gens) # write info to .json file for visualization tool
+        original_article = batch.original_articles[0]  # string
+        original_abstract = batch.original_abstracts[0]  # string
+        original_abstract_sents = batch.original_abstracts_sents[0]  # list of strings
 
-        # Check if SECS_UNTIL_NEW_CKPT has elapsed; if so return so we can load a new checkpoint
-        t1 = time.time()
-        if t1-t0 > SECS_UNTIL_NEW_CKPT:
-          tf.logging.info('We\'ve been decoding with same checkpoint for %i seconds. Time to load new checkpoint', t1-t0)
-          _ = util.load_ckpt(self._saver, self._sess)
-          t0 = time.time()
+        article_withunks = data.show_art_oovs(original_article, self._vocab) # string
+        abstract_withunks = data.show_abs_oovs(original_abstract, self._vocab, (batch.art_oovs[0] if FLAGS.pointer_gen else None)) # string
+
+        # Run beam search to get best Hypothesis
+        best_hyp = beam_search.run_beam_search(self._sess, self._model, self._vocab, batch)
+
+        # Extract the output ids from the hypothesis and convert back to words
+        output_ids = [int(t) for t in best_hyp.tokens[1:]]
+        decoded_words = data.outputids2words(output_ids, self._vocab, (batch.art_oovs[0] if FLAGS.pointer_gen else None))
+
+        # Remove the [STOP] token from decoded_words, if necessary
+        try:
+          fst_stop_idx = decoded_words.index(data.STOP_DECODING) # index of the (first) [STOP] symbol
+          decoded_words = decoded_words[:fst_stop_idx]
+        except ValueError:
+          decoded_words = decoded_words
+        decoded_output = ' '.join(decoded_words) # single string
+
+        if FLAGS.single_pass:
+          self.write_for_rouge(original_abstract_sents, decoded_words, counter) # write ref summary and decoded summary to file, to eval with pyrouge later
+          counter += 1 # this is how many examples we've decoded
+        else:
+          print_results(article_withunks, abstract_withunks, decoded_output) # log output to screen
+          self.write_for_attnvis(article_withunks, abstract_withunks, decoded_words, best_hyp.attn_dists, best_hyp.p_gens) # write info to .json file for visualization tool
+
+          # Check if SECS_UNTIL_NEW_CKPT has elapsed; if so return so we can load a new checkpoint
+          t1 = time.time()
+          if t1-t0 > SECS_UNTIL_NEW_CKPT:
+            tf.logging.info('We\'ve been decoding with same checkpoint for %i seconds. Time to load new checkpoint', t1-t0)
+            _ = util.load_ckpt(self._saver, self._sess)
+            t0 = time.time()
+      except IndexError as e:
+        counter += 1
+      # if counter == 1670:
+      #   tf.logging.info("Decoder has finished reading dataset for single_pass.")
+      #   tf.logging.info("Output has been saved in %s and %s. Now starting ROUGE eval...", self._rouge_ref_dir, self._rouge_dec_dir)
+      #   results_dict = rouge_eval(self._rouge_ref_dir, self._rouge_dec_dir)
+      #   rouge_log(results_dict, self._decode_dir)
 
   def write_for_rouge(self, reference_sents, decoded_words, ex_index):
     """Write output to file in correct format for eval with pyrouge. This is called in single_pass mode.
